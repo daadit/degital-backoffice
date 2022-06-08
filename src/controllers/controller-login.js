@@ -8,16 +8,12 @@ pool.on("error", (err) => {
 });
 
 module.exports = {
-    // Render tampilan untuk login yang ada didalam folder 'src/views/login.ejs'
     login(req, res) {
         res.render("login", {
             url: "http://localhost:8080/",
-            // Kirim juga library flash yang telah di set
-            colorFlash: req.flash("color"),
-            pesanFlash: req.flash("message"),
+            expressFlash: req.flash("message"),
         });
     },
-    // Post / kirim data yang diinput user
     loginAuth(req, res) {
         let email = req.body.email;
         let password = req.body.password;
@@ -27,13 +23,11 @@ module.exports = {
                 connection.query(`SELECT * FROM tb_user WHERE email = ? AND password = ?`, [email, password], function (error, results) {
                     if (error) throw error;
                     if (results.length > 0) {
-                        // Jika data ditemukan, set sesi user tersebut menjadi true
                         req.session.loggedin = true;
                         req.session.userid = results[0].id_user;
                         req.session.username = results[0].fullname;
                         res.redirect("/");
                     } else {
-                        // Jika data tidak ditemukan, set library flash dengan pesan error yang diinginkan
                         req.flash("color", "danger");
                         req.flash("message", "Wrong password!");
                         res.redirect("/login");
