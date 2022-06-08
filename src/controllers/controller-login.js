@@ -15,21 +15,25 @@ module.exports = {
         });
     },
     loginAuth(req, res) {
-        let email = req.body.email;
+        let username = req.body.username;
         let password = req.body.password;
-        if (email && password) {
+        if (username && password) {
             pool.getConnection(function (err, connection) {
                 if (err) throw err;
-                connection.query(`SELECT * FROM tb_user WHERE email = ? AND password = ?`, [email, password], function (error, results) {
+                connection.query(`SELECT * FROM administrator WHERE email = ? AND password = ?`, [username, password], function (error, results) {
                     if (error) throw error;
                     if (results.length > 0) {
-                        req.session.loggedin = true;
-                        req.session.userid = results[0].id_user;
-                        req.session.username = results[0].fullname;
-                        res.redirect("/");
+                        if (results[0].isactive == 1) {
+                            req.session.loggedin = true;
+                            req.session.userid = results[0].id;
+                            req.session.username = results[0].name;
+                            res.redirect("/");
+                        } else {
+                            req.flash("message", "Your account is banned !");
+                            res.redirect("/login");
+                        }
                     } else {
-                        req.flash("color", "danger");
-                        req.flash("message", "Wrong password!");
+                        req.flash("message", "Account not found");
                         res.redirect("/login");
                     }
                 });
@@ -40,7 +44,6 @@ module.exports = {
             res.end();
         }
     },
-    // Fungsi untuk logout | Cara memanggilnya menggunakan url/rute 'http://localhost:5050/login/logout'
     logout(req, res) {
         // Hapus sesi user dari broser
         req.session.destroy((err) => {
